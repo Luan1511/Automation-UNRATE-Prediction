@@ -120,8 +120,9 @@
                     const res = await fetch('/api/forecast-now', { method: 'POST' });
                     const data = await res.json();
                     if (res.ok) {
-                        // Reload to reflect latest forecast in server-rendered template
-                        messageEl.textContent = '✓ Forecast generated';
+                        // Show emails sent, then reload for latest server-rendered forecast
+                        const sent = (data.emails_sent ?? 0);
+                        messageEl.textContent = `✓ Forecast generated. Emails sent: ${sent}`;
                         messageEl.className = 'message success';
                         setTimeout(() => { window.location.reload(); }, 800);
                     } else {

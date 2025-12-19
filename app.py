@@ -223,11 +223,33 @@ def trigger_fetch():
 def forecast_now():
     """Manual trigger to fetch data and generate forecast immediately"""
     try:
+        # Generate latest forecast
         weekly_data_fetch()
+
+        # Load forecast and subscribers
         forecast = load_forecast()
-        if forecast:
-            return jsonify({'message': 'Forecast generated', 'forecast': forecast}), 200
-        return jsonify({'error': 'Forecast generation failed'}), 500
+        subscribers = load_subscribers()
+
+        if not forecast:
+            return jsonify({'error': 'Forecast generation failed'}), 500
+
+        # Send emails to all subscribers
+        emails_sent = 0
+        email_errors = []
+        for s in subscribers:
+            try:
+                send_forecast_email(s['email'], forecast)
+                emails_sent += 1
+            except Exception as e:
+                logger.error(f"Failed to send email to {s['email']}: {str(e)}")
+                email_errors.append({'email': s['email'], 'error': str(e)})
+
+        return jsonify({
+            'message': 'Forecast generated and notifications sent',
+            'forecast': forecast,
+            'emails_sent': emails_sent,
+            'email_errors': email_errors
+        }), 200
     except Exception as e:
         logger.error(f"Error in forecast-now: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
