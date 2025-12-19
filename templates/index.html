@@ -31,11 +31,13 @@
                     </div>
                 </div>
                 <p class="updated">Last updated: {{ forecast.date[:10] }}</p>
+                <button id="forecastNowBtn" class="secondary-btn">Forecast now</button>
             </section>
             {% else %}
             <section class="forecast-card">
                 <h2>Latest Forecast</h2>
                 <p class="no-data">No forecast data available yet. Please check back later.</p>
+                <button id="forecastNowBtn" class="secondary-btn">Forecast now</button>
             </section>
             {% endif %}
 
@@ -108,6 +110,34 @@
                 messageEl.className = 'message';
             }, 5000);
         });
+
+        // Forecast now handler
+        const forecastBtn = document.getElementById('forecastNowBtn');
+        if (forecastBtn) {
+            forecastBtn.addEventListener('click', async () => {
+                const messageEl = document.getElementById('message');
+                try {
+                    const res = await fetch('/api/forecast-now', { method: 'POST' });
+                    const data = await res.json();
+                    if (res.ok) {
+                        // Reload to reflect latest forecast in server-rendered template
+                        messageEl.textContent = '✓ Forecast generated';
+                        messageEl.className = 'message success';
+                        setTimeout(() => { window.location.reload(); }, 800);
+                    } else {
+                        messageEl.textContent = '✗ ' + (data.error || 'Failed to generate forecast');
+                        messageEl.className = 'message error';
+                    }
+                } catch (err) {
+                    messageEl.textContent = '✗ Network error';
+                    messageEl.className = 'message error';
+                }
+                setTimeout(() => {
+                    messageEl.textContent = '';
+                    messageEl.className = 'message';
+                }, 5000);
+            });
+        }
     </script>
 </body>
 </html>

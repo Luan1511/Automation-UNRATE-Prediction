@@ -219,6 +219,20 @@ def trigger_fetch():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/forecast-now', methods=['POST'])
+def forecast_now():
+    """Manual trigger to fetch data and generate forecast immediately"""
+    try:
+        weekly_data_fetch()
+        forecast = load_forecast()
+        if forecast:
+            return jsonify({'message': 'Forecast generated', 'forecast': forecast}), 200
+        return jsonify({'error': 'Forecast generation failed'}), 500
+    except Exception as e:
+        logger.error(f"Error in forecast-now: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
 if __name__ == '__main__':
     # Create data directory
     os.makedirs('data', exist_ok=True)
