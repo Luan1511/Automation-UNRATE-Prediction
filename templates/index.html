@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNRATE Forecast - US Unemployment Rate Predictions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 UNRATE Forecast</h1>
+            <p class="subtitle">US Unemployment Rate Predictions</p>
+        </header>
+
+        <main>
+            {% if forecast %}
+            <section class="forecast-card">
+                <h2>Latest Forecast</h2>
+                <div class="forecast-content">
+                    <div class="current-value">
+                        <span class="label">Current UNRATE</span>
+                        <span class="value">{{ "%.2f"|format(forecast.current_value) }}%</span>
+                        <span class="month">{{ forecast.current_month }}</span>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="forecast-value">
+                        <span class="label">Forecast</span>
+                        <span class="value forecast-highlight">{{ "%.2f"|format(forecast.forecast_value) }}%</span>
+                        <span class="month">{{ forecast.forecast_month }}</span>
+                    </div>
+                </div>
+                <p class="updated">Last updated: {{ forecast.date[:10] }}</p>
+            </section>
+            {% else %}
+            <section class="forecast-card">
+                <h2>Latest Forecast</h2>
+                <p class="no-data">No forecast data available yet. Please check back later.</p>
+            </section>
+            {% endif %}
+
+            <section class="subscribe-card">
+                <h2>📧 Get Email Notifications</h2>
+                <p>Receive forecast updates every 2 weeks</p>
+                
+                <form id="subscribeForm">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        placeholder="Enter your email" 
+                        required
+                    >
+                    <button type="submit">Subscribe</button>
+                </form>
+                
+                <div id="message" class="message"></div>
+            </section>
+
+            <section class="info-card">
+                <h2>About</h2>
+                <ul>
+                    <li><strong>Data Source:</strong> Federal Reserve Economic Data (FRED)</li>
+                    <li><strong>Model:</strong> ARIMA(2,1,2)</li>
+                    <li><strong>Update Frequency:</strong> Weekly (every Monday)</li>
+                    <li><strong>Email Notifications:</strong> Biweekly (every 2 weeks)</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by FRED API | Built for Railway deployment</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('subscribeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const messageEl = document.getElementById('message');
+            
+            try {
+                const response = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageEl.textContent = '✓ ' + data.message;
+                    messageEl.className = 'message success';
+                    document.getElementById('email').value = '';
+                } else {
+                    messageEl.textContent = '✗ ' + data.error;
+                    messageEl.className = 'message error';
+                }
+            } catch (error) {
+                messageEl.textContent = '✗ Failed to subscribe. Please try again.';
+                messageEl.className = 'message error';
+            }
+            
+            setTimeout(() => {
+                messageEl.textContent = '';
+                messageEl.className = 'message';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
